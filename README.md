@@ -2,7 +2,7 @@
 
 A real-time multimodal computer-vision pipeline for estimating student attentiveness from a consumer webcam. The system combines facial landmarks, head pose, gaze, emotion, phone detection, and temporal aggregation, then exposes attention events through a lightweight Go API.
 
-> This repository is a portfolio version of work completed during my 2025 Machine Learning Research Internship at Guardian Airwaves. It has been cleaned for public release; model weights and user recordings are not included.
+> This repository is a portfolio version of work completed during my 2025 Machine Learning Research Internship at Guardian Airwaves. It has been cleaned for public release; model weights and raw user recordings are not included. Four authorized, compressed demo clips are provided below.
 
 ## Highlights
 
