@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webcam to Python</title>
+</head>
+<body>
+    <video id="video" autoplay muted></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <button onclick="start()">Start</button>
+    <button onclick="stop()">Stop</button>
+
+    <script>
+        let video = document.getElementById('video');
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let ws = null;
+        let intervalId = null;
+
+        async function start() {
+            const userID = prompt("Enter your user ID:");
+            if (!userID) {
+                alert("User ID is required.");
+                return;
+            }
+
+            // ✅ 1. run_demo_test.py
+            try {
+                const res = await fetch(`http://localhost:4040/start-calibration?user_id=${userID}`);
+                const result = await res.json();
+                console.log("Python process started:", result);
+            } catch (err) {
+                alert("Failed to start Python process.");
+                console.error(err);
+                return;
+            }
+            // Get webcam
+            const stream = await navigator.mediaDevices.getUserMedia({video: true});
+            video.srcObject = stream;
+            
+            // Set canvas size to match video
+            video.onloadedmetadata = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            };
+
+            // Connect to Python server
+            ws = new WebSocket('ws://localhost:8765');
+            
+            ws.onopen = () => {
+                console.log('Connected to Python server');
+                // Send frames every 33ms (~30 FPS)
+                intervalId = setInterval(sendFrame, 33);
+            };
+        }
+
+        function sendFrame() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // Draw video frame to canvas
+                ctx.drawImage(video, 0, 0);
+                
+                // Convert to base64 and send
+                const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+                const base64Data = dataURL.split(',')[1];
+                ws.send(base64Data);
+            }
+        }
+
+        function stop() {
+            if (intervalId) clearInterval(intervalId);
+            if (ws) ws.close();
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+    </script>
+</body>
+</html>
